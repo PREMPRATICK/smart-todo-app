@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart To-Do Pro</title>
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center transition-all duration-300">
+
+<div class="bg-white/20 backdrop-blur-lg p-6 rounded-2xl shadow-xl w-[400px] text-white">
+
+  <div class="flex justify-between items-center mb-4">
+    <h1 class="text-2xl font-bold">Smart To-Do</h1>
+    <button onclick="toggleDark()" class="bg-white/20 px-3 py-1 rounded-lg hover:bg-white/40">🌙</button>
+  </div>
+
+  <input id="taskInput" type="text" placeholder="Enter task"
+    class="w-full p-2 rounded-lg text-black mb-2">
+
+  <div class="flex gap-2 mb-2">
+    <select id="priority" class="flex-1 p-2 rounded-lg text-black">
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+
+    <input type="date" id="deadline" class="flex-1 p-2 rounded-lg text-black">
+  </div>
+
+  <button onclick="addTask()"
+    class="w-full bg-green-500 hover:bg-green-600 p-2 rounded-lg font-semibold">
+    Add Task
+  </button>
+
+  <div class="flex justify-between mt-4 text-sm">
+    <button onclick="filterTasks('all')" class="hover:underline">All</button>
+    <button onclick="filterTasks('completed')" class="hover:underline">Completed</button>
+    <button onclick="filterTasks('pending')" class="hover:underline">Pending</button>
+  </div>
+
+  <ul id="taskList" class="mt-4 space-y-2"></ul>
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let currentFilter = "all";
+
+function saveTasks() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
+
+function addTask() {
+  let text = document.getElementById("taskInput").value;
+  let priority = document.getElementById("priority").value;
+  let deadline = document.getElementById("deadline").value;
+
+  if (text === "") return alert("Enter a task");
+
+  tasks.push({
+    text,
+    priority,
+    deadline,
+    completed: false
+  });
+
+  saveTasks();
+  renderTasks();
+  document.getElementById("taskInput").value = "";
+}
+
+function deleteTask(index) {
+  tasks.splice(index, 1);
+  saveTasks();
+  renderTasks();
+}
+
+function toggleComplete(index) {
+  tasks[index].completed = !tasks[index].completed;
+  saveTasks();
+  renderTasks();
+}
+
+function filterTasks(type) {
+  currentFilter = type;
+  renderTasks();
+}
+
+function renderTasks() {
+  let list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  tasks.forEach((task, index) => {
+    if (currentFilter === "completed" && !task.completed) return;
+    if (currentFilter === "pending" && task.completed) return;
+
+    let color = {
+      high: "border-red-400",
+      medium: "border-yellow-400",
+      low: "border-green-400"
+    };
+
+    let li = document.createElement("li");
+    li.className = `p-3 rounded-lg bg-white/30 backdrop-blur flex justify-between items-center border-l-4 ${color[task.priority]} hover:scale-[1.02] transition`;
+
+    if (task.completed) li.classList.add("opacity-50", "line-through");
+
+    li.innerHTML = `
+      <div onclick="toggleComplete(${index})" class="cursor-pointer">
+        <p class="font-semibold">${task.text}</p>
+        <small>${task.deadline || ""}</small>
+      </div>
+      <button onclick="deleteTask(${index})" class="text-red-300 hover:text-red-500">✖</button>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+function toggleDark() {
+  document.body.classList.toggle("bg-gray-900");
+}
+
+renderTasks();
+</script>
+
+</body>
+</html>
